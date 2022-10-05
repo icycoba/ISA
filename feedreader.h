@@ -12,11 +12,9 @@ Soubor:     feedreader.h
 #include <regex>
 #include <algorithm>
 #include <filesystem>
-// #include <getopt.h> // NOPE, JUST CANT TODO REMOVEME
 #include <libxml/parser.h>
 #include <openssl/rsa.h>
 #include <sys/socket.h>
 
-namespace fs = std::filesystem;
-
+int argParse(std::vector<std::string>& args, std::vector<std::string>& feedURLs, std::vector<std::string>& certStrings);
 std::string fileReader(std::ifstream& file);

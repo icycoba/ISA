@@ -6,6 +6,17 @@ Soubor:     feedreader.cc
 
 #include "feedreader.h"
 
+
+int main(int argc, char **argv){
+    std::vector<std::string> args(argv, argv+argc);
+
+    std::vector<std::string> feedURLs;
+    std::vector<std::string> certStrings;
+
+    argParse(args, feedURLs, certStrings);
+    return 0;
+}
+
 int argParse(std::vector<std::string>& args,
              std::vector<std::string>& feedURLs,
              std::vector<std::string>& certStrings){
@@ -203,15 +214,6 @@ int argParse(std::vector<std::string>& args,
     return 0;
 }
 
-int main(int argc, char **argv){
-    std::vector<std::string> args(argv, argv+argc);
-
-    std::vector<std::string> feedURLs;
-    std::vector<std::string> certStrings;
-
-    argParse(args, feedURLs, certStrings);
-    return 0;
-}
 
 std::string fileReader(std::ifstream& file){
     std::string line;

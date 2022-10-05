@@ -6,9 +6,9 @@ Soubor:     feedreader.cc
 
 #include "feedreader.h"
 
-int main(int argc, char **argv){
-    std::vector<std::string> args(argv, argv+argc);
-
+int argParse(std::vector<std::string>& args,
+             std::vector<std::string>& feedURLs,
+             std::vector<std::string>& certStrings){
     bool fFlag = false;
     bool cFlag = false;
     bool CFlag = false;
@@ -19,10 +19,8 @@ int main(int argc, char **argv){
     bool aTempFlag = false;
     bool uTempFlag = false;
     bool foundFlag = false;
-    std::string fFile;
 
     for(size_t i = 1; i < args.size(); i++){
-        //TODO remove after basic argparse
         if(args[i].find("-") != std::string::npos){
             foundFlag = false;
             if(args[i].find("-f") != std::string::npos){
@@ -32,6 +30,44 @@ int main(int argc, char **argv){
                 }
                 fFlag = true;
                 foundFlag = true;
+
+                i++;
+                if(i >= args.size()){
+                    fprintf(stderr, "Parametr -f musí následovat jméno souboru obsahující adresy!\n");
+                    exit(EXIT_FAILURE);
+                }
+                //TODO idealne zamenit za regex, tady je sance, ze bude soubor jako feedfile.txt.pripona, coz neni dobre
+                if(args[i].find(".txt") != std::string::npos){
+                    try{
+                        std::ifstream file(args[i]);
+                        if (file.is_open()) {
+                            std::string line;
+                            while (std::getline(file, line)) {
+                                // Remove whitespaces from the line
+                                line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+                                
+                                if(line[0] == '#' || line.empty()){
+                                    continue;
+                                } else{
+                                    feedURLs.push_back(line);
+                                }
+                            }
+                            file.close();
+                            continue;
+                        } else{
+                            throw(21);
+                        }
+                    }
+                    catch(int errNum) {
+                        if(errNum == 21){
+                            fprintf(stderr, "Soubor u parametru -f neexistuje nebo nebyl nalezen!\n");
+                        }
+                        exit(EXIT_FAILURE);
+                    }
+                } else{
+                    fprintf(stderr, "Soubor u parametru -f musí mít koncovku .txt\n");
+                    exit(EXIT_FAILURE);
+                }
             }
             if(args[i].find("-c") != std::string::npos){
                 if(cFlag){
@@ -40,14 +76,65 @@ int main(int argc, char **argv){
                 }
                 cFlag = true;
                 foundFlag = true;
+
+                i++;
+                if(i >= args.size()){
+                    fprintf(stderr, "Parametr -c musí následovat jméno souboru obsahující certifikát!\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                try{
+                    std::ifstream file(args[i]);
+                    if (file.is_open()){
+                        std::string outString = fileReader(file);
+                        certStrings.push_back(outString);
+                        file.close();
+                    } else{
+                        throw(21);
+                    }
+                    continue;
+                }
+                catch(int errNum) {
+                    if(errNum == 21){
+                        fprintf(stderr, "Soubor u parametru -f neexistuje nebo nebyl nalezen!\n");
+                    }
+                    exit(EXIT_FAILURE);
+                }
             }
             if(args[i].find("-C") != std::string::npos){
                 if(CFlag){
                     fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 3\n");
                     exit(EXIT_FAILURE);
-                }
+                } 
                 CFlag = true;
                 foundFlag = true;
+
+                i++;
+                if(i >= args.size()){
+                    fprintf(stderr, "Parametr -C musí následovat jméno adresáře obsahující soubor s certifikátem!\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                std::string path = args[i];
+                for(const auto& entry: std::filesystem::directory_iterator(path)){
+                    try{
+                        std::ifstream file(entry.path());
+                        if(file.is_open()){
+                            std::string outString = fileReader(file);
+                            certStrings.push_back(outString);
+                            file.close();
+                        } else{
+                            throw(21);
+                        }
+                    }
+                    catch(int errNum) {
+                        if(errNum == 21){
+                            fprintf(stderr, "Soubor u parametru -f neexistuje nebo nebyl nalezen!\n");
+                        }
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                continue;
             }
             if(std::regex_search(args[i], std::regex("-\\b(?!\\w*(\\w)\\w*\\1)[Tau]+\\b"))){
                 // regex taken from https://stackoverflow.com/a/13546700
@@ -86,10 +173,51 @@ int main(int argc, char **argv){
             aTempFlag = false;
             uTempFlag = false;
         }
-        // TODO Debug printout args
-        //std::cout << args[i] << std::endl;
+        if(std::regex_search(args[i], std::regex("^(http|https)://"))){
+            if(fFlag){
+                fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 10\n");
+                exit(EXIT_FAILURE);
+            }
+            fFlag = true;
+            feedURLs.push_back(args[i]);
+            continue;
+        }
     }
+
     // TODO Debug printout flags
-    std::cout << fFlag << cFlag << CFlag << TFlag << aFlag << uFlag << std::endl;
+    //std::cout << "DEBUG: Flags:\n=======================================================\n" <<fFlag << cFlag << CFlag << TFlag << aFlag << uFlag << std::endl << "=======================================================" << std::endl;
+    //if(fFlag){
+    //    std::cout << "DEBUG: FEED URLs:\n=======================================================\n";
+    //    for (auto feedURL: feedURLs){
+    //        std::cout << feedURL << "\n";
+    //    }
+    //    std::cout << "=======================================================\n";
+    //}
+    //if(cFlag || CFlag){
+    //    std::cout << "DEBUG: Cert Strings:\n=======================================================\n";
+    //    for (auto certString: certStrings){
+    //        std::cout << certString << "\n=======================================================";
+    //    }
+    //}
+    //std::cout << std::endl;
     return 0;
+}
+
+int main(int argc, char **argv){
+    std::vector<std::string> args(argv, argv+argc);
+
+    std::vector<std::string> feedURLs;
+    std::vector<std::string> certStrings;
+
+    argParse(args, feedURLs, certStrings);
+    return 0;
+}
+
+std::string fileReader(std::ifstream& file){
+    std::string line;
+    std::string outString;
+    while (std::getline(file, line)) {
+        outString.append(line);
+    }
+    return outString;
 }

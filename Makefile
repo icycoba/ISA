@@ -7,10 +7,10 @@ BIN=feedreader
 OBJFILES=$(BIN).o
 
 CXX=g++
-CFLAGS=-o -Wall
+CFLAGS= -Wall
 
 %.o: %.cc
-	$(CXX) -c $<
+	$(CXX) -std=c++17 -c $<
 
 all: $(BIN)
 

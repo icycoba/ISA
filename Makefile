@@ -9,13 +9,10 @@ OBJFILES=$(BIN).o
 CXX=g++
 CFLAGS= -Wall
 
-%.o: %.cc
-	$(CXX) -std=c++17 -c $<
-
 all: $(BIN)
 
-$(BIN): $(OBJFILES)
-	$(CXX) $(CFLAGS) $(OBJFILES) -o $@
+$(BIN):
+	g++ -std=c++17 -o feedreader feedreader.cc -lssl -lcrypto
 
-clean:
-	rm $(BIN) $(OBJFILES)
+clean: $(BIN)
+	rm $(BIN)

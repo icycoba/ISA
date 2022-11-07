@@ -89,22 +89,28 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
             std::string path;
             std::string hostname;
             const char* bioURL;
-            
+
             try{
                 foundIndex = feedURL.find_first_of(":");
                 protocol = feedURL.substr(0, foundIndex);
-
-                    //if(feedURL.substr(foundIndex+1).find(":") != std::string::npos){
-                    //    std::cout << feedURL.substr(foundIndex+1).find_first_of(":") << std::endl;
-                    //}
-
                 feedURL = feedURL.substr(foundIndex+3);
+
+                // GET PORT
+                if(feedURL.find(":") != std::string::npos){
+                    protocol = feedURL.substr(feedURL.find(":")+1);
+                    protocol = protocol.substr(0, protocol.find("/"));
+                }
+
                 foundIndex = feedURL.find_first_of("/");
                 path = feedURL.substr(foundIndex, feedURL.size()-1);
                 feedURL = feedURL.substr(0, foundIndex);
                 hostname = feedURL;
 
-                // TODO IF CUSTOM PORT
+                // IF PORT IS SET
+                if(hostname.find(":") != std::string::npos){
+                    feedURL = feedURL.substr(0, feedURL.find(":"));
+                }
+
                 bioURL = feedURL.append(":").append(protocol).c_str();
                 bio = BIO_new_ssl_connect(ctx);
             } catch(...){

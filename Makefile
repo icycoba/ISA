@@ -1,18 +1,15 @@
-# Autor: Martin Hlinský (xhlins01)
-# Projekt: Síťové aplikace a správa sítí - Čtečka novinek ve formátu Atom a RSS s podporou TLS
+XMLLDFLAGS!=pkg-config --libs libxml-2.0
+XMLLDFLAGS?=$(shell pkg-config --libs libxml-2.0)
+XMLCFLAGS!=pkg-config --cflags libxml-2.0
+XMLCFLAGS?=$(shell pkg-config --cflags libxml-2.0)
 
-.PHONY: all clean
+CXXFLAGS:=$(XMLCFLAGS) -std=c++17 -g -Wall
+LDLIBS:=$(XMLLDFLAGS) -lssl -lcrypto
+PRJ=feedreader
 
-BIN=feedreader
-OBJFILES=$(BIN).o
+$(PRJ): feedreader.cc argparse.cc xmlretrieve.cc
 
-CXX=g++
-CFLAGS= -Wall
-
-all: $(BIN)
-
-$(BIN):
-	g++ -std=c++17 -o feedreader feedreader.cc -lssl -lcrypto
-
-clean: $(BIN)
-	rm $(BIN)
+test:
+	./test.sh
+clean:
+	rm -f *.o $(PRJ)

@@ -55,16 +55,7 @@ static void printFormattedXML(xmlNode* a_node, bool titleFound, struct parameter
     }
 }
 
-void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *params){
-    const char* CAfile = (params->certStrings.empty()) ? NULL : params->certStrings[0].c_str();
-    const char* CApath = (params->certFolders.empty()) ? NULL : params->certFolders[0].c_str();
-
-    long res = 1;
-
-    SSL_CTX *ctx =  SSL_CTX_new(SSLv23_client_method());
-    BIO *bio =      NULL;
-    SSL *ssl =      NULL;
-
+static void initCTX(SSL_CTX *ctx){
     SSL_load_error_strings();
     ERR_load_BIO_strings();
     OpenSSL_add_all_algorithms();
@@ -76,6 +67,66 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
 
     const long flags = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
     SSL_CTX_set_options(ctx, flags);
+}
+
+static void setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bioURL, std::string feedURL){
+    long res = 1;
+
+    BIO_get_ssl(*bio, ssl);
+    if(! (ssl != NULL)){
+        fprintf(stderr, "Funkce BIO_get_ssl() selhala!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    SSL_set_mode(*ssl, SSL_MODE_AUTO_RETRY);
+    const char* const PREFERRED_CIPHERS = "HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4";
+    res = SSL_set_cipher_list(*ssl, PREFERRED_CIPHERS);
+    if(!(1 == res)) fprintf(stderr, "Funkce SSL_set_cipher_list() selhala!\n");
+
+    res = SSL_set_tlsext_host_name(*ssl, hostname.c_str());
+    if(!(1 == res)) fprintf(stderr, "Funkce SSL_set_tlsext_host_name() selhala!\n");
+
+    if(bio == NULL){
+        fprintf(stderr, "Nepodařilo se vytvořit připojení!\n");
+        BIO_free_all(*bio);
+        exit(EXIT_FAILURE);
+    }
+
+    if(! BIO_set_conn_hostname(*bio, bioURL)){
+        fprintf(stderr, "Funkce BIO_set_conn_hostname() selhala!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(BIO_do_connect(*bio) <= 0){
+        BIO_reset(*bio);
+        *bio = BIO_new_connect(bioURL);
+        if(*bio == NULL){
+            fprintf(stderr, "Nepodařilo se vytvořit připojení!\n");
+            BIO_free_all(*bio);
+            exit(EXIT_FAILURE);
+        }
+        if(BIO_do_connect(*bio) <= 0){
+            fprintf(stderr, "Nepodařilo se připojit k odkazu %s!\n", feedURL.c_str());
+            BIO_free_all(*bio);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if(SSL_get_verify_result(*ssl) != X509_V_OK){
+        fprintf(stderr, "Nepodařilo se ověřit platnost certifikátu!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *params){
+    const char* CAfile = (params->certStrings.empty()) ? NULL : params->certStrings[0].c_str();
+    const char* CApath = (params->certFolders.empty()) ? NULL : params->certFolders[0].c_str();
+
+    SSL_CTX *ctx =  SSL_CTX_new(SSLv23_client_method());
+    BIO *bio =      NULL;
+    SSL *ssl =      NULL;
+
+    initCTX(ctx);
 
     if(! SSL_CTX_load_verify_locations(ctx, CAfile, CApath)){
         fprintf(stderr, "Nepodařilo se ověřit platnost certifikátu!\n");
@@ -114,55 +165,12 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 bioURL = feedURL.append(":").append(protocol).c_str();
                 bio = BIO_new_ssl_connect(ctx);
             } catch(...){
-                fprintf(stderr, "Chyba v odakzu lmao\n");
+                fprintf(stderr, "Chyba ve zpracování odkazu!\n");
                 exit(EXIT_FAILURE);
             }
 
-            BIO_get_ssl(bio, &ssl);
-            if(! (ssl != NULL)){
-                fprintf(stderr, "bio_get_ssl failed\n");
-                exit(EXIT_FAILURE);
-            }
+            setupBIO(&bio, &ssl, hostname, bioURL, feedURL);
 
-            SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
-
-            const char* const PREFERRED_CIPHERS = "HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4";
-            res = SSL_set_cipher_list(ssl, PREFERRED_CIPHERS);
-            if(!(1 == res)) fprintf(stderr, "ssl_set_cipher_list failed\n");
-
-            res = SSL_set_tlsext_host_name(ssl, hostname.c_str());
-            if(!(1 == res)) fprintf(stderr, "ssl_set_tlsext_host_name failed\n");
-
-            if(bio == NULL){
-                fprintf(stderr, "\033[31mNepodařilo se vytvořit připojení!\033[0m\n");
-                BIO_free_all(bio);
-                exit(EXIT_FAILURE);
-            }
-
-            if(! BIO_set_conn_hostname(bio, bioURL)){
-                fprintf(stderr, "bio_set_conn_hostname failed\n");
-                exit(EXIT_FAILURE);
-            };
-
-            if(BIO_do_connect(bio) <= 0){
-                BIO_reset(bio);
-                bio = BIO_new_connect(bioURL);
-                if(bio == NULL){
-                    fprintf(stderr, "\033[31mNepodařilo se vytvořit připojení!\033[0m\n");
-                    BIO_free_all(bio);
-                    exit(EXIT_FAILURE);
-                }
-                if(BIO_do_connect(bio) <= 0){
-                    fprintf(stderr, "\033[31mNepodařilo se připojit k odkazu %s!\033[0m\n", feedURL.c_str());
-                    BIO_free_all(bio);
-                    exit(EXIT_FAILURE);
-                }
-            }
-
-            if(SSL_get_verify_result(ssl) != X509_V_OK){
-                fprintf(stderr, "Nepodařilo se ověřit platnost certifikátu!\n");
-                exit(EXIT_FAILURE);
-            }
             std::string requestParts = "GET ";
             requestParts.append(path).append(
                     " HTTP/1.0\r\nHost: ").append(hostname).append(
@@ -199,7 +207,7 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
 
                     feedURL = tempString;
                 }
-            } else{
+            } else if(responseHeader.find("200") != std::string::npos){
                 BIO_free_all(bio);
                 std::string xmlResponse = response;
 
@@ -214,13 +222,13 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 doc = xmlReadDoc((const xmlChar*)xmlResponse.c_str(), NULL, NULL, 0); // 
 
                 if(doc == NULL){
-                    fprintf(stderr, "Nepodařilo se otevřít dokument XML.\n");
+                    fprintf(stderr, "Nepodařilo se otevřít dokument XML!\n");
                     exit(EXIT_FAILURE);
                 }
 
                 root_element = xmlDocGetRootElement(doc);
                 if(root_element == NULL){
-                    fprintf(stderr, "Nepodařilo se načíst kořenový element dokumentu XML.\n");
+                    fprintf(stderr, "Nepodařilo se načíst kořenový element dokumentu XML!\n");
                     exit(EXIT_FAILURE);
                 }
 
@@ -230,6 +238,8 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 xmlCleanupParser();
 
                 break;
+            } else{
+                fprintf(stderr, "Neplatná odpověď HTML! %s\n", responseHeader.c_str());
             }
             BIO_free_all(bio);
         }

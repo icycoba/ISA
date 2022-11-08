@@ -1,5 +1,26 @@
 #include "argparse.h"
 
+static void printHelp(){
+    fprintf(stdout, "Použití:\n");
+    fprintf(stdout, "feedreader <URL | -f <feedfile>> [-c <certfile>] [-C <certaddr>] [-T] [-a] [-u]\n");
+    fprintf(stdout, "<URL | -f <feedfile>>\n\tZdroj ve formátu Atom nebo RSS\n\tPovinný parametr\n");
+    fprintf(stdout, "[-c <certfile>]\n\tSoubor s certifikáty, který se použije pro ověřeni platnosti certifikátu SSL/TLS předloženého serverem\n\tNepovinný parametr\n");
+    fprintf(stdout, "[-C <certaddr>]\n\tAdresář, ve kterém se mají vyhledávat certifikáty, které se použijí pro ověření platnosti certifikátu předloženého serverem\n\tNepovinný parametr\n");
+    fprintf(stdout, "[-T]\n\tZobrazí navíc informace o čase změny záznamu či vytvoření záznamu\n\tNepovinný parametr\n");
+    fprintf(stdout, "[-a]\n\tZobrazí jméno autora či jeho e-mailovou adresu\n\tNepovinný parametr\n");
+    fprintf(stdout, "[-u]\n\tZobrazí asociované URL\n\tNepovinný parametr\n");
+    exit(EXIT_FAILURE);
+}
+
+static bool uniqueFlagCheck(bool *flag){
+    if(*flag){
+        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 1\n");
+        exit(EXIT_FAILURE);
+    }
+    *flag = true;
+    return true;
+}
+
 int argParse(std::vector<std::string>& args,
              struct parameters *params){
     bool fFlag = false;
@@ -11,27 +32,14 @@ int argParse(std::vector<std::string>& args,
     bool foundFlag = false;
 
     if(args.size() <= 1){
-        fprintf(stderr, "Použití:\n");
-        fprintf(stderr, "feedreader <URL | -f <feedfile>> [-c <certfile>] [-C <certaddr>] [-T] [-a] [-u]\n");
-        fprintf(stderr, "<URL | -f <feedfile>>\n\tZdroj ve formátu Atom nebo RSS\n\tPovinný parametr\n");
-        fprintf(stderr, "[-c <certfile>]\n\tSoubor s certifikáty, který se použije pro ověřeni platnosti certifikátu SSL/TLS předloženého serverem\n\tNepovinný parametr\n");
-        fprintf(stderr, "[-C <certaddr>]\n\tAdresář, ve kterém se mají vyhledávat certifikáty, které se použijí pro ověření platnosti certifikátu předloženého serverem\n\tNepovinný parametr\n");
-        fprintf(stderr, "[-T]\n\tZobrazí navíc informace o čase změny záznamu či vytvoření záznamu\n\tNepovinný parametr\n");
-        fprintf(stderr, "[-a]\n\tZobrazí jméno autora či jeho e-mailovou adresu\n\tNepovinný parametr\n");
-        fprintf(stderr, "[-u]\n\tZobrazí asociované URL\n\tNepovinný parametr\n");
-        exit(EXIT_FAILURE);
+        printHelp();
     }
 
     for(size_t i = 1; i < args.size(); i++){
         if(args[i][0] == '-'){
             foundFlag = false;
             if(args[i].find("-f") != std::string::npos){
-                if(fFlag){
-                    fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 1\n");
-                    exit(EXIT_FAILURE);
-                }
-                fFlag = true;
-                foundFlag = true;
+                foundFlag = uniqueFlagCheck(&fFlag);
 
                 i++;
                 if(i >= args.size()){
@@ -72,13 +80,7 @@ int argParse(std::vector<std::string>& args,
                 }
             }
             if(args[i].find("-c") != std::string::npos){
-                if(cFlag){
-                    fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 2\n");
-                    exit(EXIT_FAILURE);
-                }
-                cFlag = true;
-                foundFlag = true;
-
+                foundFlag = uniqueFlagCheck(&cFlag);
                 i++;
                 if(i >= args.size()){
                     fprintf(stderr, "Parametr -c musí následovat jméno souboru obsahující certifikát!\n");
@@ -97,12 +99,7 @@ int argParse(std::vector<std::string>& args,
                 }
             }
             if(args[i].find("-C") != std::string::npos){
-                if(CFlag){
-                    fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 3\n");
-                    exit(EXIT_FAILURE);
-                } 
-                CFlag = true;
-                foundFlag = true;
+                foundFlag = uniqueFlagCheck(&CFlag);
 
                 i++;
                 if(i >= args.size()){
@@ -113,6 +110,9 @@ int argParse(std::vector<std::string>& args,
                 std::string path = args[i];
                 params->certFolders.push_back(path);
                 continue;
+            }
+            if(args[i].find("-h") != std::string::npos){
+                printHelp();
             }
             if(std::regex_search(args[i], std::regex("-\\b(?!\\w*(\\w)\\w*\\1)[Tau]+\\b"))){
                 // regex taken from https://stackoverflow.com/a/13546700
@@ -166,27 +166,5 @@ int argParse(std::vector<std::string>& args,
     params->aFlag = aFlag;
     params->TFlag = TFlag;
     params->uFlag = uFlag;
-
-    // TODO Debug printout flags
-    /*
-    std::cout << "DEBUG: Flags:\n=======================================================\n" <<fFlag << cFlag << CFlag << TFlag << aFlag << uFlag << std::endl << "=======================================================" << std::endl;
-    if(fFlag){
-        std::cout << "DEBUG: FEED URLs:\n=======================================================\n";
-        for (auto feedURL: params->feedURLs){
-            std::cout << feedURL << "\n";
-        }
-        std::cout << "=======================================================\n";
-    }
-    if(cFlag || CFlag){
-        std::cout << "DEBUG: Cert Strings:\n=======================================================\n";
-        for (auto certString: params->certStrings){
-            std::cout << certString << "\n=======================================================";
-        }
-        for (auto certFolder: params->certFolders){
-            std::cout << certFolder << "\n=======================================================";
-        }
-    }
-    std::cout << std::endl;
-    */
     return 0;
 }

@@ -69,32 +69,37 @@ static void initCTX(SSL_CTX *ctx){
     SSL_CTX_set_options(ctx, flags);
 }
 
-static void setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bioURL, std::string feedURL){
+static int setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bioURL, std::string feedURL){
     long res = 1;
 
     BIO_get_ssl(*bio, ssl);
     if(! (ssl != NULL)){
         fprintf(stderr, "Funkce BIO_get_ssl() selhala!\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     SSL_set_mode(*ssl, SSL_MODE_AUTO_RETRY);
     const char* const PREFERRED_CIPHERS = "HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4";
     res = SSL_set_cipher_list(*ssl, PREFERRED_CIPHERS);
-    if(!(1 == res)) fprintf(stderr, "Funkce SSL_set_cipher_list() selhala!\n");
+    if(!(1 == res)){
+        fprintf(stderr, "Funkce SSL_set_cipher_list() selhala!\n");
+        return 1;
+    }
 
     res = SSL_set_tlsext_host_name(*ssl, hostname.c_str());
-    if(!(1 == res)) fprintf(stderr, "Funkce SSL_set_tlsext_host_name() selhala!\n");
+    if(!(1 == res)){
+        fprintf(stderr, "Funkce SSL_set_tlsext_host_name() selhala!\n");
+        return 1;
+    }
 
     if(bio == NULL){
         fprintf(stderr, "Nepodařilo se vytvořit připojení!\n");
-        BIO_free_all(*bio);
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     if(! BIO_set_conn_hostname(*bio, bioURL)){
         fprintf(stderr, "Funkce BIO_set_conn_hostname() selhala!\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     if(BIO_do_connect(*bio) <= 0){
@@ -102,20 +107,19 @@ static void setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bio
         *bio = BIO_new_connect(bioURL);
         if(*bio == NULL){
             fprintf(stderr, "Nepodařilo se vytvořit připojení!\n");
-            BIO_free_all(*bio);
-            exit(EXIT_FAILURE);
+            return 1;
         }
         if(BIO_do_connect(*bio) <= 0){
             fprintf(stderr, "Nepodařilo se připojit k odkazu %s!\n", feedURL.c_str());
-            BIO_free_all(*bio);
-            exit(EXIT_FAILURE);
+            return 1;
         }
     }
 
     if(SSL_get_verify_result(*ssl) != X509_V_OK){
         fprintf(stderr, "Nepodařilo se ověřit platnost certifikátu!\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
+    return 0;
 }
 
 void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *params){
@@ -166,10 +170,13 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 bio = BIO_new_ssl_connect(ctx);
             } catch(...){
                 fprintf(stderr, "Chyba ve zpracování odkazu!\n");
-                exit(EXIT_FAILURE);
+                break;
             }
 
-            setupBIO(&bio, &ssl, hostname, bioURL, feedURL);
+            if(setupBIO(&bio, &ssl, hostname, bioURL, feedURL)){
+                BIO_free_all(bio);
+                break;
+            }
 
             std::string requestParts = "GET ";
             requestParts.append(path).append(
@@ -223,13 +230,13 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
 
                 if(doc == NULL){
                     fprintf(stderr, "Nepodařilo se otevřít dokument XML!\n");
-                    exit(EXIT_FAILURE);
+                    break;
                 }
 
                 root_element = xmlDocGetRootElement(doc);
                 if(root_element == NULL){
                     fprintf(stderr, "Nepodařilo se načíst kořenový element dokumentu XML!\n");
-                    exit(EXIT_FAILURE);
+                    break;
                 }
 
                 printFormattedXML(root_element, false, &(*params));
@@ -240,6 +247,7 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 break;
             } else{
                 fprintf(stderr, "Neplatná odpověď HTML! %s\n", responseHeader.c_str());
+                break;
             }
             BIO_free_all(bio);
         }

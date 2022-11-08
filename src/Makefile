@@ -1,15 +1,20 @@
-XMLLDFLAGS!=pkg-config --libs libxml-2.0
-XMLLDFLAGS?=$(shell pkg-config --libs libxml-2.0)
-XMLCFLAGS!=pkg-config --cflags libxml-2.0
-XMLCFLAGS?=$(shell pkg-config --cflags libxml-2.0)
+# Autor: Martin Hlinský (xhlins01)
+# Projekt: Síťové aplikace a správa sítí - Čtečka novinek ve formátu Atom a RSS s podporou TLS
 
-CXXFLAGS:=$(XMLCFLAGS) -std=c++17 -g -Wall
-LDLIBS:=$(XMLLDFLAGS) -lssl -lcrypto
-PRJ=feedreader
+.PHONY: all clean test
 
-$(PRJ): feedreader.cc argparse.cc xmlretrieve.cc
+BIN=feedreader
+
+CXX=g++
+CXXFLAGS= -I/usr/include/libxml2 -I/usr/local/include/libxml2 -std=c++17 -g -Wall 
+LDLIBS= -L/usr/local/lib -lxml2 -lssl -lcrypto
+
+all: $(BIN)
+
+$(BIN): feedreader.cc argparse.cc xmlretrieve.cc
 
 test:
-	./test.sh
+	./feedreadertest.sh
+
 clean:
-	rm -f *.o $(PRJ)
+	rm -f $(BIN)

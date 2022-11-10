@@ -11,7 +11,6 @@ Soubor:     feedreader.cc
 #include "feedreader.h"
 
 int main(int argc, char **argv){
-    //std::cout << "\033[32mZačátek běhu programu\033[0m\n";
     std::vector<std::string> args(argv, argv+argc);
 
     struct parameters params;
@@ -19,7 +18,5 @@ int main(int argc, char **argv){
 
     argParse(args, &params);
     retrieveXMLDocs(xmlResponses, &params);
-
-    //std::cout << "\033[32mKonec běhu programu\033[0m\n";
     return 0;
 }

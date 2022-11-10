@@ -1,3 +1,9 @@
+/*
+Autor:      Martin Hlinský (xhlins01)
+Projekt:    Síťové aplikace a správa sítí - Čtečka novinek ve formátu Atom a RSS s podporou TLS
+Soubor:     argparse.h
+*/
+
 #include <iostream>
 #include <string>
 #include <cstring>

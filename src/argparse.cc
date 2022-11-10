@@ -1,3 +1,9 @@
+/*
+Autor:      Martin Hlinský (xhlins01)
+Projekt:    Síťové aplikace a správa sítí - Čtečka novinek ve formátu Atom a RSS s podporou TLS
+Soubor:     argparse.cc
+*/
+
 #include "argparse.h"
 
 static void printHelp(){
@@ -14,7 +20,7 @@ static void printHelp(){
 
 static bool uniqueFlagCheck(bool *flag){
     if(*flag){
-        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 1\n");
+        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");
         exit(EXIT_FAILURE);
     }
     *flag = true;
@@ -118,21 +124,21 @@ int argParse(std::vector<std::string>& args,
                 // regex taken from https://stackoverflow.com/a/13546700
                 if(args[i].find("T") != std::string::npos){
                     if(TFlag){
-                        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 7\n");
+                        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");
                         exit(EXIT_FAILURE);
                     }
                     TFlag = true;
                 }
                 if(args[i].find("a") != std::string::npos){
                     if(aFlag){
-                        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 8\n");
+                        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");
                         exit(EXIT_FAILURE);
                     }
                     aFlag = true;
                 }
                 if(args[i].find("u") != std::string::npos){
                     if(uFlag){
-                        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 9\n");
+                        fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");
                         exit(EXIT_FAILURE);
                     }
                     uFlag = true;
@@ -151,7 +157,7 @@ int argParse(std::vector<std::string>& args,
         }
         if(std::regex_search(args[i], std::regex("^(http|https)://"))){
             if(fFlag){
-                fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou! 10\n");
+                fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");
                 exit(EXIT_FAILURE);
             }
             fFlag = true;

@@ -6,7 +6,15 @@ Soubor:     xmlretrieve.cc
 
 #include "xmlretrieve.h"
 
-// https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+/**
+ * Pomocná funkce sloužící pro průchod elementu <entry> nebo <item>
+ * 
+ * Inspirováno příkladem:
+ *  https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+ * 
+ * @param a_node    Uzel, na kterém se momentálně nachází čtečka XML
+ * @param output    Struktura, do které se ukládají jednotlivé informace (název článku, autor, URL, aktualizace)
+*/
 static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
     xmlNode* cur_node = NULL;
 
@@ -16,9 +24,13 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
                 output->title = cur_node->children->content;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"name")){
                 output->author = cur_node->children->content;
+            } else if(xmlStrEqual(cur_node->name, (xmlChar *)"email") && output->author == NULL){
+                output->author = cur_node->children->content;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"link")){
                 output->link = cur_node->children->content;
-            } else if(xmlStrEqual(cur_node->name, (xmlChar *)"pubDate") || xmlStrEqual(cur_node->name, (xmlChar *)"updated")){
+            } else if(xmlStrEqual(cur_node->name, (xmlChar *)"lastBuildDate") || xmlStrEqual(cur_node->name, (xmlChar *)"updated")){
+                output->update = cur_node->children->content;
+            } else if(xmlStrEqual(cur_node->name, (xmlChar *)"pubDate") && output->update == NULL){
                 output->update = cur_node->children->content;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"guid")){
                 xmlAttr* cur_node_attr = NULL;
@@ -31,7 +43,7 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
                 }
             }
         } else if(cur_node->type == XML_ELEMENT_NODE){
-            // POKUD JE LINK V HREF A NE JAKO CONTENT ELEMENTU
+            // Zpracování Atom odkazu
             if(xmlStrEqual(cur_node->name, (xmlChar *)"link")){
                 xmlAttr* cur_node_attr = NULL;
                 for(cur_node_attr = cur_node->properties; cur_node_attr; cur_node_attr = cur_node_attr->next){
@@ -45,6 +57,16 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
     }
 }
 
+/**
+ * Pomocná funkce sloužící pro výpis XML v určitém formátu
+ * 
+ * Inspirováno příkladem:
+ *  https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+ * 
+ * @param a_node        Uzel, na kterém se momentálně nachází čtečka XML
+ * @param titleFound    Pomocná proměnná sloužící pro usnadnění rozlišení typu elementu <title> v dokumentu
+ * @param params        Struktura uchovávající hodnoty parametrů
+*/
 static void printFormattedXML(xmlNode* a_node, bool titleFound, struct parameters *params){
     xmlNode* cur_node = NULL;
 
@@ -70,6 +92,16 @@ static void printFormattedXML(xmlNode* a_node, bool titleFound, struct parameter
     }
 }
 
+
+/**
+ * Pomocná funkce sloužící pro nastavení kontextu pro navázání připojení
+ * 
+ * Vypracováno podle příkladů:
+ *  https://wiki.openssl.org/index.php/SSL/TLS_Client
+ *  https://developer.ibm.com/tutorials/l-openssl/
+ * 
+ * @param ctx Struktura obsahující informace o SSL
+*/
 static void initCTX(SSL_CTX *ctx){
     SSL_load_error_strings();
     ERR_load_BIO_strings();
@@ -84,6 +116,21 @@ static void initCTX(SSL_CTX *ctx){
     SSL_CTX_set_options(ctx, flags);
 }
 
+/**
+ * Pomocná funkce sloužící pro navázání připojení
+ * 
+ * Vypracováno podle příkladů:
+ *  https://wiki.openssl.org/index.php/SSL/TLS_Client
+ *  https://developer.ibm.com/tutorials/l-openssl/
+ * 
+ * @param bio       Ukazatel sloužící pro komunikaci
+ * @param ssl       Ukazatel uchovávající informace o SSL
+ * @param hostname  Hostitelské jméno vzdáleného serveru
+ * @param bioURL    Adresa ve tvaru hostname:port
+ * @param feedURL   Adresa ve tvaru protocol://hostname/path
+ * 
+ * @return 0 při úspěšném dokončení, 1 pokud je funkce neúspěšná
+*/
 static int setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bioURL, std::string feedURL){
     long res = 1;
 
@@ -137,7 +184,13 @@ static int setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bioU
     return 0;
 }
 
-void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *params){
+/**
+ * Funkce sloužící k navázání připojení a následnému zpracovávání XML z feedu
+ * 
+ * @param params Struktura uchovávající hodnoty parametrů 
+*/
+void retrieveXMLDocs(struct parameters *params){
+    // Pokud je certStrings(Folders) prázdné, pak jsou proměnné NULL, jinak se použije hodnota na 0. indexu
     const char* CAfile = (params->certStrings.empty()) ? NULL : params->certStrings[0].c_str();
     const char* CApath = (params->certFolders.empty()) ? NULL : params->certFolders[0].c_str();
 
@@ -169,7 +222,7 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 protocol = feedURL.substr(0, foundIndex);
                 feedURL = feedURL.substr(foundIndex+3);
 
-                // GET PORT
+                // Pokud se vyskytuje port v odkazu, pak jej použijeme místo protokolu
                 if(feedURL.find(":") != std::string::npos){
                     protocol = feedURL.substr(feedURL.find(":")+1);
                     protocol = protocol.substr(0, protocol.find("/"));
@@ -180,7 +233,7 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 feedURL = feedURL.substr(0, foundIndex);
                 hostname = feedURL;
 
-                // IF PORT IS SET
+                // Pokud je port nastavený, musíme upravit proměnnou feedURL
                 if(hostname.find(":") != std::string::npos){
                     feedURL = feedURL.substr(0, feedURL.find(":"));
                 }
@@ -197,6 +250,15 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 break;
             }
 
+            /**
+             * Poskládá požadavek ve tvaru:
+             * 
+             * GET <path> HTTP/1.0
+             * Host: <hostname>
+             * Connection: close
+             * 
+             * 
+            */
             std::string requestParts = "GET ";
             requestParts.append(path).append(
                     " HTTP/1.0\r\nHost: ").append(hostname).append(
@@ -207,6 +269,8 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
 
             std::string response;
             int len = 0;
+
+            // Čtení a ukládání odpovědi do proměnné response
             do{
                 char buf[1024] = {};
                 len = BIO_read(bio, buf, sizeof(buf)-1);
@@ -219,11 +283,15 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
 
             BIO_reset(bio);
 
+            // Získání prvního řádku z odpovědi response (pro účely získání statusu)
             std::istringstream f(response);
             std::string responseHeader;
             std::getline(f, responseHeader);
 
-            if(responseHeader.find("301") != std::string::npos || responseHeader.find("302") != std::string::npos){
+            if( responseHeader.find("301") != std::string::npos ||
+                responseHeader.find("302") != std::string::npos ||
+                responseHeader.find("307") != std::string::npos ||
+                responseHeader.find("308") != std::string::npos){
                 if(response.find("\nLocation") != std::string::npos){
                     std::string tempString = response;
 
@@ -240,7 +308,6 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
                 if(response.find("<?xml") != std::string::npos){
                     xmlResponse = response.substr(response.find("<?xml"));
                 }
-                xmlResponses.push_back(xmlResponse);
 
                 xmlDoc *doc = NULL;
                 xmlNode *root_element = NULL;

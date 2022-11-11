@@ -8,14 +8,26 @@ Soubor:     argparse.cc
 
 static void printHelp(){
     fprintf(stdout, "Použití:\n");
-    fprintf(stdout, "feedreader <URL | -f <feedfile>> [-c <certfile>] [-C <certaddr>] [-T] [-a] [-u]\n");
-    fprintf(stdout, "<URL | -f <feedfile>>\n\tZdroj ve formátu Atom nebo RSS\n\tPovinný parametr\n");
-    fprintf(stdout, "[-c <certfile>]\n\tSoubor s certifikáty, který se použije pro ověřeni platnosti certifikátu SSL/TLS předloženého serverem\n\tNepovinný parametr\n");
-    fprintf(stdout, "[-C <certaddr>]\n\tAdresář, ve kterém se mají vyhledávat certifikáty, které se použijí pro ověření platnosti certifikátu předloženého serverem\n\tNepovinný parametr\n");
+    fprintf(stdout, "feedreader [-h/--help] <URL | -f/--file <feedfile>> [-c/--certFile <certfile>] [-C/--CertPath <certaddr>] [-T] [-a] [-u]\n");
+    fprintf(stdout, "[-h/--help]\n\tVypíše nápovědu\n\tNepovinný parametr\n");
+    fprintf(stdout, "<URL | -f/--file <feedfile>>\n\tZdroj ve formátu Atom nebo RSS\n\tPovinný parametr\n");
+    fprintf(stdout, "[-c/--certFile <certfile>]\n\tSoubor s certifikáty, který se použije pro ověřeni platnosti certifikátu SSL/TLS předloženého serverem\n\tNepovinný parametr\n");
+    fprintf(stdout, "[-C/--CertPath <certaddr>]\n\tAdresář, ve kterém se mají vyhledávat certifikáty, které se použijí pro ověření platnosti certifikátu předloženého serverem\n\tNepovinný parametr\n");
     fprintf(stdout, "[-T]\n\tZobrazí navíc informace o čase změny záznamu či vytvoření záznamu\n\tNepovinný parametr\n");
     fprintf(stdout, "[-a]\n\tZobrazí jméno autora či jeho e-mailovou adresu\n\tNepovinný parametr\n");
     fprintf(stdout, "[-u]\n\tZobrazí asociované URL\n\tNepovinný parametr\n");
     exit(EXIT_FAILURE);
+}
+
+static void unknownArgCheck(std::vector<std::string>& args, size_t i, std::string shortParam, std::string longParam){
+    if(args[i] != shortParam && args[i] != longParam){
+        char* err_char;
+        err_char = &args[i][0];
+        fprintf(stderr, "Neznámý argument %s\n", err_char);
+        exit(EXIT_FAILURE);
+    } else{
+        return;
+    }
 }
 
 static bool uniqueFlagCheck(bool *flag){
@@ -45,6 +57,7 @@ int argParse(std::vector<std::string>& args,
         if(args[i][0] == '-'){
             foundFlag = false;
             if(args[i].find("-f") != std::string::npos){
+                unknownArgCheck(args, i, "-f", "--file");
                 foundFlag = uniqueFlagCheck(&fFlag);
 
                 i++;
@@ -86,6 +99,7 @@ int argParse(std::vector<std::string>& args,
                 }
             }
             if(args[i].find("-c") != std::string::npos){
+                unknownArgCheck(args, i, "-c", "--certFile");
                 foundFlag = uniqueFlagCheck(&cFlag);
                 i++;
                 if(i >= args.size()){
@@ -105,6 +119,7 @@ int argParse(std::vector<std::string>& args,
                 }
             }
             if(args[i].find("-C") != std::string::npos){
+                unknownArgCheck(args, i, "-C", "--CertPath");
                 foundFlag = uniqueFlagCheck(&CFlag);
 
                 i++;
@@ -118,6 +133,7 @@ int argParse(std::vector<std::string>& args,
                 continue;
             }
             if(args[i].find("-h") != std::string::npos){
+                unknownArgCheck(args, i, "-h", "--help");
                 printHelp();
             }
             if(std::regex_search(args[i], std::regex("-\\b(?!\\w*(\\w)\\w*\\1)[Tau]+\\b"))){
@@ -167,6 +183,10 @@ int argParse(std::vector<std::string>& args,
             fprintf(stderr, "Zadaná adresa (%s) je neplatná!\n", args[i].c_str());
             exit(EXIT_FAILURE);
         }
+    }
+    if(!fFlag){
+        fprintf(stderr, "Nebyla zadána žádná URL!\n");
+        exit(EXIT_FAILURE);
     }
 
     params->aFlag = aFlag;

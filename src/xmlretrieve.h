@@ -26,4 +26,4 @@ struct xmlOutput{
     xmlChar* update = NULL;
 };
 
-void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *params);
+void retrieveXMLDocs(struct parameters *params);

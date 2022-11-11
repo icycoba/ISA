@@ -14,9 +14,8 @@ int main(int argc, char **argv){
     std::vector<std::string> args(argv, argv+argc);
 
     struct parameters params;
-    std::vector<std::string> xmlResponses;
 
     argParse(args, &params);
-    retrieveXMLDocs(xmlResponses, &params);
+    retrieveXMLDocs(&params);
     return 0;
 }

@@ -20,6 +20,15 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
                 output->link = cur_node->children->content;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"pubDate") || xmlStrEqual(cur_node->name, (xmlChar *)"updated")){
                 output->update = cur_node->children->content;
+            } else if(xmlStrEqual(cur_node->name, (xmlChar *)"guid")){
+                xmlAttr* cur_node_attr = NULL;
+                for(cur_node_attr = cur_node->properties; cur_node_attr; cur_node_attr = cur_node_attr->next){
+                    if(xmlStrEqual(cur_node_attr->name, (xmlChar *)"isPermaLink")){
+                        if(xmlStrEqual(cur_node_attr->children->content, (xmlChar *)"true")){
+                            output->link = cur_node->children->content;
+                        }
+                    }
+                }
             }
         } else if(cur_node->type == XML_ELEMENT_NODE){
             // POKUD JE LINK V HREF A NE JAKO CONTENT ELEMENTU
@@ -138,9 +147,13 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
 
     initCTX(ctx);
 
-    if(! SSL_CTX_load_verify_locations(ctx, CAfile, CApath)){
-        fprintf(stderr, "Nepodařilo se ověřit platnost certifikátu!\n");
-        exit(EXIT_FAILURE);
+    if(!CAfile && !CApath){
+        SSL_CTX_set_default_verify_paths(ctx);
+    }else{
+        if(! SSL_CTX_load_verify_locations(ctx, CAfile, CApath)){
+            fprintf(stderr, "Nepodařilo se ověřit platnost certifikátu!\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     for(auto feedURL : params->feedURLs){
@@ -210,7 +223,7 @@ void retrieveXMLDocs(std::vector<std::string>& xmlResponses, struct parameters *
             std::string responseHeader;
             std::getline(f, responseHeader);
 
-            if(responseHeader.find("301") != std::string::npos){
+            if(responseHeader.find("301") != std::string::npos || responseHeader.find("302") != std::string::npos){
                 if(response.find("\nLocation") != std::string::npos){
                     std::string tempString = response;
 

@@ -13,3 +13,30 @@ https://www.theregister.co.uk/hardware/headlines.atom
 #xkcd
 https://xkcd.com/atom.xml
 https://what-if.xkcd.com/feed.atom
+
+#Fox news
+https://moxie.foxnews.com/google-publisher/world.xml
+
+#Apology line
+https://rss.art19.com/apology-line
+
+#Bible
+https://feeds.fireside.fm/bibleinayear/rss
+
+#Crime junkie
+https://feeds.megaphone.fm/ADL9840290619
+
+#The experiment
+http://feeds.wnyc.org/experiment_podcast
+
+#DB show
+https://feeds.megaphone.fm/WWO3519750118
+
+#Unraveled
+https://rss.acast.com/unraveled
+
+#Dateline
+https://podcastfeeds.nbcnews.com/dateline-nbc
+
+#Lincoln project
+https://lincolnproject.libsyn.com/rss

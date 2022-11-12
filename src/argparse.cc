@@ -93,36 +93,30 @@ int argParse(std::vector<std::string>& args,
                     fprintf(stderr, "Parametr -f musí následovat jméno souboru obsahující adresy!\n");
                     exit(EXIT_FAILURE);
                 }
-                //TODO idealne zamenit za regex, tady je sance, ze bude soubor jako feedfile.txt.pripona, coz neni dobre
-                if(args[i].find(".txt") != std::string::npos){
-                    try{
-                        std::ifstream file(args[i]);
-                        if (file.is_open()) {
-                            std::string line;
-                            while (std::getline(file, line)) {
-                                // Remove whitespaces from the line
-                                line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-                                
-                                if(line[0] == '#' || line.empty()){
-                                    continue;
-                                } else{
-                                    params->feedURLs.push_back(line);
-                                }
+                try{
+                    std::ifstream file(args[i]);
+                    if (file.is_open()) {
+                        std::string line;
+                        while (std::getline(file, line)) {
+                            // Remove whitespaces from the line
+                            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+                            
+                            if(line[0] == '#' || line.empty()){
+                                continue;
+                            } else{
+                                params->feedURLs.push_back(line);
                             }
-                            file.close();
-                            continue;
-                        } else{
-                            throw(21);
                         }
+                        file.close();
+                        continue;
+                    } else{
+                        throw(21);
                     }
-                    catch(int errNum) {
-                        if(errNum == 21){
-                            fprintf(stderr, "Soubor u parametru -f neexistuje nebo nebyl nalezen!\n");
-                        }
-                        exit(EXIT_FAILURE);
+                }
+                catch(int errNum) {
+                    if(errNum == 21){
+                        fprintf(stderr, "Soubor u parametru -f neexistuje nebo nebyl nalezen!\n");
                     }
-                } else{
-                    fprintf(stderr, "Soubor u parametru -f musí mít koncovku .txt\n");
                     exit(EXIT_FAILURE);
                 }
             }

@@ -1,20 +1,31 @@
 # Autor: Martin Hlinský (xhlins01)
 # Projekt: Síťové aplikace a správa sítí - Čtečka novinek ve formátu Atom a RSS s podporou TLS
 
-.PHONY: all clean test
+.PHONY: all clean test pack
 
 BIN=feedreader
 
 CXX=g++
-CXXFLAGS= -I/usr/include/libxml2 -I/usr/local/include/libxml2 -std=c++17 -g -Wall 
-LDLIBS= -L/usr/local/lib -lxml2 -lssl -lcrypto
+CXXFLAGS=-static-libstdc++ -I/usr/include/libxml2 -I/usr/local/include/libxml2 -std=c++17 -g -Wall 
+LDLIBS=-L/usr/local/lib -lxml2 -lssl -lcrypto
 
-all: $(BIN)
+all: feedreader.o argparse.o xmlretrieve.o
+	$(CXX) $(CXXFLAGS) feedreader.o argparse.o xmlretrieve.o -o $(BIN) $(LDLIBS)
 
-$(BIN): feedreader.cc argparse.cc xmlretrieve.cc
+feedreader.o: feedreader.cc feedreader.h argparse.h xmlretrieve.h
+	$(CXX) $(CXXFLAGS) -c feedreader.cc $(LDLIBS)
+
+xmlretrieve.o: xmlretrieve.cc argparse.h xmlretrieve.h
+	$(CXX) $(CXXFLAGS) -c xmlretrieve.cc $(LDLIBS)
+
+argparse.o: argparse.cc argparse.h
+	$(CXX) $(CXXFLAGS) -c argparse.cc $(LDLIBS)
+
+pack: clean
+	tar -cf xhlins01.tar argparse.cc argparse.h feedreader.cc feedreader.h feedreadertest.sh Makefile xmlretrieve.cc xmlretrieve.h
 
 test:
 	./feedreadertest.sh
 
 clean:
-	rm -f $(BIN)
+	rm -f *.tar *.o $(BIN)

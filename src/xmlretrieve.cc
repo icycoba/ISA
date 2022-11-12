@@ -22,6 +22,8 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
         if(cur_node->type == XML_ELEMENT_NODE && cur_node->children){
             if(xmlStrEqual(cur_node->name, (xmlChar *)"title")){
                 output->title = cur_node->children->content;
+            } else if(xmlStrEqual(cur_node->name, (xmlChar *)"author")){
+                output->author = cur_node->children->content;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"name")){
                 output->author = cur_node->children->content;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"email") && output->author == NULL){
@@ -78,19 +80,38 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
  * Inspirováno příkladem:
  *  https://gnome.pages.gitlab.gnome.org/libxml2/examples/
  * 
- * @param a_node        Uzel, na kterém se momentálně nachází čtečka XML
- * @param titleFound    Pomocná proměnná sloužící pro usnadnění rozlišení typu elementu <title> v dokumentu
- * @param params        Struktura uchovávající hodnoty parametrů
+ * @param a_node            Uzel, na kterém se momentálně nachází čtečka XML
+ * @param titleFound        Pomocná proměnná sloužící k usnadnění rozlišení typu elementu <title> v dokumentu
+ * @param globalAuthorFound Pomocná proměnná sloužící k usnadnění výpisu autora nad prvním <entry>
+ * @param params            Struktura uchovávající hodnoty parametrů
 */
-static void printFormattedXML(xmlNode* a_node, bool titleFound, struct parameters *params){
+static void printFormattedXML(xmlNode* a_node, bool titleFound, bool globalAuthorFound, struct parameters *params){
     xmlNode* cur_node = NULL;
+    xmlChar* globalAuthor = NULL;
 
     for(cur_node = a_node; cur_node; cur_node = cur_node->next){
         struct xmlOutput output;
+        if(globalAuthor){
+            output.author = globalAuthor;
+        }
         if(cur_node->type == XML_ELEMENT_NODE && cur_node->children){
             if(!titleFound && xmlStrEqual(cur_node->name, (xmlChar *)"title")){
                 printf("*** %s ***\n", cur_node->children->content);
                 titleFound = true;
+            } else if(!globalAuthorFound && xmlStrEqual(cur_node->name, (xmlChar *)"author")){
+                // Pokud je globální autor, tzn. autor nad <entry> taggem,
+                // uloží se do proměnné globalAuthor a použije se pro případ,
+                // že se nenalezne autor uvnitř <entry>
+                if(xmlStrEqual(cur_node->children->name, (xmlChar *)"name")){
+                    globalAuthor = cur_node->children->content;
+                } else if(xmlStrEqual(cur_node->children->name, (xmlChar *)"email") && output.author == NULL){
+                    globalAuthor = cur_node->children->content;
+                } else{
+                    globalAuthor = cur_node->children->content;
+                }
+                output.author = globalAuthor;
+
+                globalAuthorFound = true;
             } else if(xmlStrEqual(cur_node->name, (xmlChar *)"item") || xmlStrEqual(cur_node->name, (xmlChar *)"entry")){
                 retrieveXMLEntryContent(cur_node->children, &output);
                 printf("%s\n", output.title);
@@ -103,7 +124,7 @@ static void printFormattedXML(xmlNode* a_node, bool titleFound, struct parameter
                 printf("\n");
             }
         }
-        printFormattedXML(cur_node->children, titleFound, &(*params));
+        printFormattedXML(cur_node->children, titleFound, globalAuthorFound, &(*params));
     }
 }
 
@@ -340,7 +361,7 @@ void retrieveXMLDocs(struct parameters *params){
                     break;
                 }
 
-                printFormattedXML(root_element, false, &(*params));
+                printFormattedXML(root_element, false, false, &(*params));
 
                 xmlFreeDoc(doc);
                 xmlCleanupParser();

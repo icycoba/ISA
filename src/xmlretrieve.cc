@@ -46,9 +46,24 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
             // Zpracování Atom odkazu
             if(xmlStrEqual(cur_node->name, (xmlChar *)"link")){
                 xmlAttr* cur_node_attr = NULL;
+                xmlChar* tempURL = NULL;
+                bool relFlag = false;
+
                 for(cur_node_attr = cur_node->properties; cur_node_attr; cur_node_attr = cur_node_attr->next){
                     if(xmlStrEqual(cur_node_attr->name, (xmlChar *)"href")){
-                        output->link = cur_node_attr->children->content;
+                        if(!relFlag){
+                            tempURL = cur_node_attr->children->content;
+                        } else{
+                            output->link = cur_node_attr->children->content;
+                        }
+                    }
+                    if(xmlStrEqual(cur_node_attr->name, (xmlChar *)"rel")){
+                        if(xmlStrEqual(cur_node_attr->children->content, (xmlChar *)"alternate")){
+                            relFlag = true;
+                            if(tempURL){
+                                output->link = tempURL;
+                            }
+                        }
                     }
                 }
             }
@@ -187,7 +202,7 @@ static int setupBIO(BIO** bio, SSL **ssl, std::string hostname, const char* bioU
 /**
  * Funkce sloužící k navázání připojení a následnému zpracovávání XML z feedu
  * 
- * @param params Struktura uchovávající hodnoty parametrů 
+ * @param params Struktura uchovávající hodnoty parametrů
 */
 void retrieveXMLDocs(struct parameters *params){
     // Pokud je certStrings(Folders) prázdné, pak jsou proměnné NULL, jinak se použije hodnota na 0. indexu

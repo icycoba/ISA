@@ -1,0 +1,33 @@
+# ISA
+
+Martin Hlinský (xhlins01)
+12.11.2022
+
+Jedná se o čtečku novinek ve formátu Atom/RSS. Projekt byl vypracován v jazyce C++ s použitím standardních knihoven a knihoven OpenSSL a libxml2.
+
+Příklad spuštění programu:
+
+./feedreader https://xkcd.com/atom.xml
+
+Příklad výstupu programu:
+
+*** xkcd.com ***
+Y2K and 2038
+Autor: Nepodařilo se vyhledat autora článku
+URL: https://xkcd.com/2697/
+Aktualizace: 2022-11-11T00:00:00Z
+
+Precision vs Accuracy
+Autor: Nepodařilo se vyhledat autora článku
+URL: https://xkcd.com/2696/
+Aktualizace: 2022-11-09T00:00:00Z
+
+Soil
+Autor: Nepodařilo se vyhledat autora článku
+URL: https://xkcd.com/2695/
+Aktualizace: 2022-11-07T00:00:00Z
+
+Königsberg
+Autor: Nepodařilo se vyhledat autora článku
+URL: https://xkcd.com/2694/
+Aktualizace: 2022-11-04T00:00:00Z

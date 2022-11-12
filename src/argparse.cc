@@ -6,6 +6,9 @@ Soubor:     argparse.cc
 
 #include "argparse.h"
 
+/**
+ * Pomocná funkce pro výpis nápovědy
+*/
 static void printHelp(){
     fprintf(stdout, "Použití:\n");
     fprintf(stdout, "feedreader [-h/--help] <URL | -f/--file <feedfile>> [-c/--certFile <certfile>] [-C/--CertPath <certaddr>] [-T] [-a] [-u]\n");
@@ -19,6 +22,15 @@ static void printHelp(){
     exit(EXIT_FAILURE);
 }
 
+/**
+ * Pomocná funkce pro kontrolu, zda daný parametr existuje
+ * Pokud parametr neexistuje, vypíše se chyba a běh programu se ukončí s návratovým kódem 1
+ * 
+ * @param   args        Pole parametrů implementováno pomocí std::vector
+ * @param   i           Iterátor parametru
+ * @param   shortParam  Krátká verze zápisu parametru, například -h
+ * @param   longParam   Dlouhá verze zápisu parametru, například --help
+*/
 static void unknownArgCheck(std::vector<std::string>& args, size_t i, std::string shortParam, std::string longParam){
     if(args[i] != shortParam && args[i] != longParam){
         char* err_char;
@@ -30,6 +42,14 @@ static void unknownArgCheck(std::vector<std::string>& args, size_t i, std::strin
     }
 }
 
+/**
+ * Pomocná funkce pro kontrolu unikátnosti parametrů
+ * Pokud se vyskytují vícekrát, vypíše se chyba a běh programu se ukončí s návratovým kódem 1
+ * 
+ * @param   flag    Příznak výskytu parametru
+ * 
+ * @return  Funkce vrací true, pokud je průběh úspěšný
+*/
 static bool uniqueFlagCheck(bool *flag){
     if(*flag){
         fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");
@@ -39,6 +59,14 @@ static bool uniqueFlagCheck(bool *flag){
     return true;
 }
 
+/**
+ * Funkce sloužící ke zpracování parametrů a kontrole jejich správnosti
+ * 
+ * @param   args    Pole parametrů implementováno pomocí std::vector
+ * @param   params  Struktura uchovávající hodnoty parametrů
+ * 
+ * @return  Funkce vrací 0, pokud je průběh úspěšný
+*/
 int argParse(std::vector<std::string>& args,
              struct parameters *params){
     bool fFlag = false;

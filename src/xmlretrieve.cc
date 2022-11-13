@@ -4,13 +4,47 @@ Projekt:    Síťové aplikace a správa sítí - Čtečka novinek ve formátu A
 Soubor:     xmlretrieve.cc
 */
 
+/**
+ * OpenSSL:
+ * 
+ * Copyright (c) 1998-2019 The OpenSSL Project.  All rights reserved.
+ * This product includes software developed by the OpenSSL Project
+ * for use in the OpenSSL Toolkit (http://www.openssl.org/)
+ * 
+ * This product includes cryptographic software written by Eric Young
+ * (eay@cryptsoft.com).  This product includes software written by Tim
+ * Hudson (tjh@cryptsoft.com).
+ * 
+ * OpenSSL License available at: https://www.openssl.org/source/license-openssl-ssleay.txt
+*/
+
+/**
+ * Libxml2:
+ * 
+ * Copyright (C) 1998-2012 Daniel Veillard. All Rights Reserved.
+ * 
+ * Copyright (C) 1998 Bjorn Reese and Daniel Stenberg.
+ * 
+ * Copyright (C) 2000 Bjorn Reese and Daniel Stenberg.
+ * 
+ * Copyright (C) 2000 Gary Pennington and Daniel Veillard.
+ * 
+ * Copyright (C) 2001 Bjorn Reese <breese@users.sourceforge.net>
+ * 
+ * Copyright (C) 2000,2012 Bjorn Reese and Daniel Veillard.
+*/
+
 #include "xmlretrieve.h"
 
 /**
  * Pomocná funkce sloužící pro průchod elementu <entry> nebo <item>
  * 
  * Inspirováno příkladem:
- *  https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+ * 
+ * Dostupné na: https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+ * Autor: Alfred Mickautsch
+ * Příklad: tree1.c
+ * Prohlášení: Části kódu byly pozměněny a funkčností je stejný pouze průchodem stromem.
  * 
  * @param a_node    Uzel, na kterém se momentálně nachází čtečka XML
  * @param output    Struktura, do které se ukládají jednotlivé informace (název článku, autor, URL, aktualizace)
@@ -78,7 +112,11 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
  * Pomocná funkce sloužící pro výpis XML v určitém formátu
  * 
  * Inspirováno příkladem:
- *  https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+ * 
+ * Dostupné na: https://gnome.pages.gitlab.gnome.org/libxml2/examples/
+ * Autor: Alfred Mickautsch
+ * Příklad: tree1.c
+ * Prohlášení: Části kódu byly pozměněny a funkčností je stejný pouze průchodem stromem.
  * 
  * @param a_node            Uzel, na kterém se momentálně nachází čtečka XML
  * @param titleFound        Pomocná proměnná sloužící k usnadnění rozlišení typu elementu <title> v dokumentu
@@ -133,8 +171,19 @@ static void printFormattedXML(xmlNode* a_node, bool titleFound, bool globalAutho
  * Pomocná funkce sloužící pro nastavení kontextu pro navázání připojení
  * 
  * Vypracováno podle příkladů:
- *  https://wiki.openssl.org/index.php/SSL/TLS_Client
- *  https://developer.ibm.com/tutorials/l-openssl/
+ * 
+ * Dostupný na: https://wiki.openssl.org/index.php/SSL/TLS_Client
+ * Autor:       Viktor Dukhovni
+ * Příklad:     openssl-bio-fetch.tar.gz
+ * Prohlášení:  Část kódu je převzata z výše uvedené stránky
+ *              z důvodu, že se jedná o inicializační funkce.
+ *  
+ * Dostupný na: https://developer.ibm.com/tutorials/l-openssl/
+ * Autor:       Kenneth Ballard
+ * Datum:       15. srpna 2018
+ * Příklad:     Úseky kódu na zmíněné URL
+ * Prohlášení:  Část kódu je převzata z výše uvedené stránky
+ *              z důvodu, že se jedná o inicializační funkce.
  * 
  * @param ctx Struktura obsahující informace o SSL
 */
@@ -155,9 +204,18 @@ static void initCTX(SSL_CTX *ctx){
 /**
  * Pomocná funkce sloužící pro navázání připojení
  * 
- * Vypracováno podle příkladů:
- *  https://wiki.openssl.org/index.php/SSL/TLS_Client
- *  https://developer.ibm.com/tutorials/l-openssl/
+ * Dostupný na: https://wiki.openssl.org/index.php/SSL/TLS_Client
+ * Autor:       Viktor Dukhovni
+ * Příklad:     openssl-bio-fetch.tar.gz
+ * Prohlášení:  Část kódu je převzata z výše uvedené stránky
+ *              z důvodu, že se jedná o inicializační funkce.
+ *  
+ * Dostupný na: https://developer.ibm.com/tutorials/l-openssl/
+ * Autor:       Kenneth Ballard
+ * Datum:       15. srpna 2018
+ * Příklad:     Úseky kódu na zmíněné URL
+ * Prohlášení:  Část kódu je převzata z výše uvedené stránky
+ *              z důvodu, že se jedná o inicializační funkce.
  * 
  * @param bio       Ukazatel sloužící pro komunikaci
  * @param ssl       Ukazatel uchovávající informace o SSL
@@ -230,6 +288,13 @@ void retrieveXMLDocs(struct parameters *params){
     const char* CAfile = (params->certStrings.empty()) ? NULL : params->certStrings[0].c_str();
     const char* CApath = (params->certFolders.empty()) ? NULL : params->certFolders[0].c_str();
 
+    /**
+     * Dostupný na: https://wiki.openssl.org/index.php/SSL/TLS_Client
+     * Autor:       Viktor Dukhovni
+     * Příklad:     openssl-bio-fetch.tar.gz
+     * Prohlášení:  Část kódu v následujícím úseku je převzata z výše
+     *              uvedené stránky z důvodu, že se jedná o inicializační funkce.
+    */
     SSL_CTX *ctx =  SSL_CTX_new(SSLv23_client_method());
     BIO *bio =      NULL;
     SSL *ssl =      NULL;
@@ -244,6 +309,9 @@ void retrieveXMLDocs(struct parameters *params){
             exit(EXIT_FAILURE);
         }
     }
+    /**
+     * Konec převzaté části kódu
+    */
 
     for(auto feedURL : params->feedURLs){
         while(1){
@@ -324,6 +392,9 @@ void retrieveXMLDocs(struct parameters *params){
             std::string responseHeader;
             std::getline(f, responseHeader);
 
+            // Odpověď 301, 302, 307, 308 implikuje přesměrování a obsahuje vždy Location:
+            // Odpověď 200 je OK, tudíž program pokračuje do zpracování XML
+            // Jiné odpovědi nejsou programem podporovány
             if( responseHeader.find("301") != std::string::npos ||
                 responseHeader.find("302") != std::string::npos ||
                 responseHeader.find("307") != std::string::npos ||

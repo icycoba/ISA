@@ -1,16 +1,6 @@
 # Autor: Martin Hlinský
 # Projekt: Síťové aplikace a správa sítí - Čtečka novinek ve formátu Atom a RSS s podporou TLS
 # Soubor: feedreadertest.sh
-
-DIR=../tests/testOut
-
-if [ -d "$DIR" ];
-then
-    rm -rf $DIR;
-fi
-
-mkdir $DIR;
-
 successcount=0;
 count=0;
 
@@ -21,7 +11,7 @@ if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
 fi
 count=$((count+1));
-./feedreader http://www.fit.vutbr.cz/news/news-rss.php -C /etc/ssl/certs -Tau >/dev/null 2>/dev/null
+./feedreader -f ../tests/feedfile -C /etc/ssl/certs -Tau >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));

@@ -22,10 +22,12 @@ argparse.o: argparse.cc argparse.h
 	$(CXX) $(CXXFLAGS) -c argparse.cc $(LDLIBS)
 
 pack: clean
-	tar -cf xhlins01.tar argparse.cc argparse.h feedreader.cc feedreader.h feedreadertest.sh Makefile xmlretrieve.cc xmlretrieve.h
+	mkdir ../xhlins01
+	tar -cvf ../xhlins01/xhlins01.tar ../src ../tests ../docs ../README
 
-test:
+test: all
 	./feedreadertest.sh
 
 clean:
 	rm -f *.tar *.o $(BIN)
+	rm -rf ../xhlins01

@@ -23,7 +23,7 @@ argparse.o: argparse.cc argparse.h
 
 pack: clean
 	mkdir ../xhlins01
-	tar -cvf ../xhlins01/xhlins01.tar ../src ../tests ../docs ../README
+	tar -cvf ../xhlins01/xhlins01.tar ../src ../tests ../docs ../certs ../README
 
 test: all
 	./feedreadertest.sh

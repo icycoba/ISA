@@ -121,7 +121,7 @@ int argParse(std::vector<std::string>& args,
                 }
             }
             if(args[i].find("-c") != std::string::npos){
-                unknownArgCheck(args, i, "-c", "--certFile");
+                unknownArgCheck(args, i, "-c", "--certfile");
                 foundFlag = uniqueFlagCheck(&cFlag);
                 i++;
                 if(i >= args.size()){
@@ -141,7 +141,7 @@ int argParse(std::vector<std::string>& args,
                 }
             }
             if(args[i].find("-C") != std::string::npos){
-                unknownArgCheck(args, i, "-C", "--CertPath");
+                unknownArgCheck(args, i, "-C", "--Certpath");
                 foundFlag = uniqueFlagCheck(&CFlag);
 
                 i++;

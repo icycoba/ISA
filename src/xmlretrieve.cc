@@ -42,7 +42,7 @@ Soubor:     xmlretrieve.cc
  * Inspirováno příkladem:
  * 
  * Dostupné na: https://gnome.pages.gitlab.gnome.org/libxml2/examples/
- * Autor: Alfred Mickautsch
+ * Autor: Dodji Seketeli
  * Příklad: tree1.c
  * Prohlášení: Části kódu byly pozměněny a funkčností je stejný pouze průchodem stromem.
  * 
@@ -114,7 +114,7 @@ static void retrieveXMLEntryContent(xmlNode* a_node, struct xmlOutput *output){
  * Inspirováno příkladem:
  * 
  * Dostupné na: https://gnome.pages.gitlab.gnome.org/libxml2/examples/
- * Autor: Alfred Mickautsch
+ * Autor: Dodji Seketeli
  * Příklad: tree1.c
  * Prohlášení: Části kódu byly pozměněny a funkčností je stejný pouze průchodem stromem.
  * 

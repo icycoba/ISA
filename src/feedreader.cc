@@ -4,10 +4,6 @@ Projekt:    Síťové aplikace a správa sítí - Čtečka novinek ve formátu A
 Soubor:     feedreader.cc
 */
 
-// Dokumentace
-// https://wiki.openssl.org/index.php/SSL/TLS_Client
-// https://developer.ibm.com/tutorials/l-openssl/
-
 #include "feedreader.h"
 
 int main(int argc, char **argv){

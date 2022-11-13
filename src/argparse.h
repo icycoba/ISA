@@ -14,13 +14,16 @@ Soubor:     argparse.h
 #include <algorithm>
 #include <filesystem>
 
+/**
+ * Pomocná struktura pro uložení hodnot parametrů
+*/
 struct parameters{
-    std::vector<std::string> feedURLs;
-    std::vector<std::string> certStrings;
-    std::vector<std::string> certFolders;
-    bool TFlag = false;
-    bool aFlag = false;
-    bool uFlag = false;
+    std::vector<std::string> feedURLs;      /**Pole URL, které se bude zpracovávat*/
+    std::vector<std::string> certStrings;   /**Pole souborů s certifikáty (použije se pouze první)*/
+    std::vector<std::string> certFolders;   /**Pole složek, které se budou používat pro hledání certifikátl (použije se pouze první)*/
+    bool TFlag = false;                     /**Příznak časové stopy*/
+    bool aFlag = false;                     /**Příznak autora*/
+    bool uFlag = false;                     /**Příznak URL*/
 };
 
 int argParse(std::vector<std::string>& args, struct parameters *params);

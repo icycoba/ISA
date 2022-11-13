@@ -7,6 +7,8 @@ Jedná se o čtečku novinek ve formátu Atom/RSS. Projekt byl vypracován v jaz
 
 Nad rámec zadání je také implementována podpora parametru --help, díky kterému se vypíše návod ke spuštění programu. Návod se vypíše taky v případě chybějících parametrů. Také bylo vypracováno řešení přesměrování při odpovědi serveru 301, 302, 307 a 308.
 
+Licence pro OpenSSL a libxml2 jsou uvedeny na začátku souboru xmlretrieve.cc. Převzaté části kódu jsou označeny.
+
 Příklad spuštění programu:
 
 ./feedreader https://xkcd.com/atom.xml

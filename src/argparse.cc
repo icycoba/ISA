@@ -159,7 +159,14 @@ int argParse(std::vector<std::string>& args,
                 printHelp();
             }
             if(std::regex_search(args[i], std::regex("-\\b(?!\\w*(\\w)\\w*\\1)[Tau]+\\b"))){
-                // regex taken from https://stackoverflow.com/a/13546700
+                /**
+                 * Část kódu převzata:
+                 * 
+                 * Dostupný na: https://stackoverflow.com/a/13546700
+                 * Autor:       Wiktor Stribiżew
+                 * Prohlášení:  Část kódu byla převzata a mírně poupravena, protože se jedná o jednoduchý regulární
+                 *              výraz, který kontroluje, zda se vyskytují maximálně tři unikátní znaky.
+                */
                 if(args[i].find("T") != std::string::npos){
                     if(TFlag){
                         fprintf(stderr, "Každý parametr se může vyskytovat pouze jednou!\n");

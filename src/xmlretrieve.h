@@ -19,11 +19,14 @@ Soubor:     xmlretrieve.h
 
 #include "argparse.h"
 
+/**
+ * Pomocná struktura pro výpis formátovaného výstupu
+*/
 struct xmlOutput{
-    xmlChar* title  = NULL;
-    xmlChar* author = NULL;
-    xmlChar* link   = NULL;
-    xmlChar* update = NULL;
+    xmlChar* title  = NULL; /**Titulek článku*/
+    xmlChar* author = NULL; /**Autor článku (jméno nebo e-mail)*/
+    xmlChar* link   = NULL; /**Odkaz na článek*/
+    xmlChar* update = NULL; /**Poslední aktualizace článku*/
 };
 
 void retrieveXMLDocs(struct parameters *params);

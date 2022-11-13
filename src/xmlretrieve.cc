@@ -188,11 +188,6 @@ static void printFormattedXML(xmlNode* a_node, bool titleFound, bool globalAutho
  * @param ctx Struktura obsahující informace o SSL
 */
 static void initCTX(SSL_CTX *ctx){
-    SSL_load_error_strings();
-    ERR_load_BIO_strings();
-    OpenSSL_add_all_algorithms();
-    SSL_library_init();
-
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 
     SSL_CTX_set_verify_depth(ctx, 4);
@@ -295,10 +290,15 @@ void retrieveXMLDocs(struct parameters *params){
      * Prohlášení:  Část kódu v následujícím úseku je převzata z výše
      *              uvedené stránky z důvodu, že se jedná o inicializační funkce.
     */
+    SSL_library_init();
+    SSL_load_error_strings();
+    ERR_load_BIO_strings();
+    OpenSSL_add_all_algorithms();
+    
     SSL_CTX *ctx =  SSL_CTX_new(SSLv23_client_method());
     BIO *bio =      NULL;
     SSL *ssl =      NULL;
-
+    
     initCTX(ctx);
 
     if(!CAfile && !CApath){

@@ -9,18 +9,21 @@ count=0;
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader -f ../tests/feedfile -C ../certs -Tau >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader http://www.fit.vutbr.cz/news/news-rss.php >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 
@@ -29,30 +32,35 @@ count=$((count+1));
 retval=$?
 if [ $retval -eq 1 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader "http://www.fit.vutbr.cz/news/news-rss.php" -f ../tests/feedfile.txt -C ../certs -c ../certs/GTS_Root_R1.pem -Tau >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 1 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 1 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader -h >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 1 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader "http://www.fit.vutbr.cz/news/news-rss.php" -C ../certs -c ../certs/GTS_Root_R1.pem -Tau -h >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 1 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 
@@ -61,12 +69,14 @@ count=$((count+1));
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader -C ../certs -u "http://www.fit.vutbr.cz/news/news-rss.php" >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 #1
@@ -74,6 +84,7 @@ count=$((count+1));
 retval=$?
 if [ $retval -eq 1 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 
@@ -82,19 +93,23 @@ count=$((count+1));
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader -C ../certs 'http://www.fit.vutbr.cz/news/news-rss.php' >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
 count=$((count+1));
 ./feedreader -C ../certs http://www.fit.vutbr.cz/news/news-rss.php >/dev/null 2>/dev/null
 retval=$?
 if [ $retval -eq 0 ]; then
     successcount=$((successcount+1));
+else echo "Test $count byl neúspěšný";
 fi
+
 count=$((count+1));
 
 echo "$successcount/$count testů bylo úspěšných!";

@@ -9,9 +9,21 @@ Nad rámec zadání je také implementována podpora parametru --help, díky kte
 
 Licence pro OpenSSL a libxml2 jsou uvedeny na začátku souboru xmlretrieve.cc. Převzaté části kódu jsou označeny.
 
+
+Přeložení programu:
+
+Pomocí příkazu "make" ve složce src/ se přeloží program do spustitelného souboru feedreader. Příklad spuštění je popsán níže, případně lze vypsat nápovědu pomocí "./feedreader -h".
+
+Pomocí "make test" se spustí testování pomocí skriptu. Pro správnou funkčnost skriptu je nutné mít ve složce /etc/ssl/certs všechny potřebné certifikáty.
+
+Pomocí "make clean" se smažou všechny soubory, které Makefile mohl vytvořit.
+
+Pomocí "make pack" se soubory k odevzdání zabalí do archivu xhlins01.tar.
+
+
 Příklad spuštění programu:
 
-./feedreader https://xkcd.com/atom.xml
+./feedreader https://xkcd.com/atom.xml -Tau
 
 Příklad výstupu programu:
 
